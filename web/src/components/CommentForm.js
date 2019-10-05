@@ -1,15 +1,28 @@
 import React, { useState } from "react";
 
+const FormHook = initialValues => {
+    const [state, setState] = useState(initialValues);
+    return [
+        state,
+        e => {
+            const { name, value } = e.target;
+            return setState({ ...state, [name]: value });
+        },
+        resetState => {
+            return setState(resetState);
+        }
+    ];
+};
+
 const CommentForm = ({ articleName, setArticleInfo }) => {
-    const [username, setUsername] = useState("");
-    const [commentText, setCommentText] = useState("");
+    const [state, setState, resetState] = FormHook({ username: "", commentText: "" });
 
     const addComment = async () => {
         const result = await fetch(`/api/articles/${articleName}/comments`, {
             method: "post",
             body: JSON.stringify({
-                username,
-                text: commentText
+                username: state.username,
+                text: state.commentText
             }),
             headers: {
                 "Content-Type": "application/json"
@@ -18,8 +31,7 @@ const CommentForm = ({ articleName, setArticleInfo }) => {
         const json = await result.json();
         setArticleInfo(json);
 
-        setUsername("");
-        setCommentText("");
+        resetState({ username: "", commentText: "" });
     };
 
     return (
@@ -27,11 +39,11 @@ const CommentForm = ({ articleName, setArticleInfo }) => {
             <h3>Add a Comment</h3>
             <label>
                 Name:
-                <input type="text" onChange={e => setUsername(e.target.value)} value={username} />
+                <input type="text" name="username" onChange={setState} value={state.username} />
             </label>
             <label>
                 Comment:
-                <textarea rows="4" cols="50" onChange={e => setCommentText(e.target.value)} value={commentText} />
+                <textarea rows="4" name="commentText" cols="50" onChange={setState} value={state.commentText} />
             </label>
             <button onClick={addComment}>Add Comment</button>
         </div>
